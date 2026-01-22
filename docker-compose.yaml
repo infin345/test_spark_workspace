@@ -1,0 +1,8 @@
+services:
+  spark-test:
+    build: .
+    volumes:
+      - .:/app
+    # pytest 대신 일반 파이썬 실행으로 변경
+    # command: python ./tests/test_parquetmain.py
+    command: python ./tests/test_parquet.py

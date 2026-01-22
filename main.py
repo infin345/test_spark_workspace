@@ -1,14 +1,20 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType
 import os
+import pandas as pd
+import pyarrow as pa
+import pyarrow.parquet as pq
+from pyspark.sql import SparkSession
+from pyspark.sql.types import StructType, StructField, StringType, IntegerType
+import os
 
-def run_exam():
+def run_exam(file_path:str):
     # 1. Spark 세션 생성
     spark = SparkSession.builder \
         .appName("ZstdParquetExample") \
         .master("local[*]") \
         .getOrCreate()
-    file_path = "no_spark_arrow_zstd.parquet"
+    # file_path = "no_spark_arrow_zstd.parquet"
     
     # 1. 파일 존재 확인
     print(f"\n[Step 1] Path existence check: {file_path}")
@@ -72,6 +78,49 @@ def run_zstd_example():
 
     spark.stop()
 
+
+def create_snappy_parquet():
+    # 1. Spark 세션 생성
+    spark = SparkSession.builder \
+        .appName("SnappyVerification") \
+        .master("local[*]") \
+        .getOrCreate()
+
+    # 2. 샘플 데이터 준비
+    data_dict = {
+        'name': ['Seo Hyo-jun', 'Gemini', 'Spark'],
+        'age': [35, 25, 10],
+        'job': ['Backend Developer', 'AI Assistant', 'Data Engine']
+    }
+    df_pd = pd.DataFrame(data_dict)
+    
+    # 3. Spark DataFrame으로 변환 및 Snappy로 저장
+    file_snappy = "sample_snappy.parquet"
+    df_spark = spark.createDataFrame(df_pd)
+    
+    print(f"\n[Step 1] Saving: {file_snappy} (Compression: Snappy)")
+    df_spark.write.mode("overwrite") \
+        .option("compression", "snappy") \
+        .parquet(file_snappy)
+    print("✅ Save Completed!")
+
+    # 4. 저장된 Snappy 파일 다시 읽기 및 count() 수행
+    try:
+        print(f"\n[Step 2] Testing 'count()' on {file_snappy}...")
+        read_df = spark.read.parquet(file_snappy)
+        
+        # 동료분이 에러 났던 바로 그 지점입니다.
+        cnt = read_df.count() 
+        
+        print(f"✅ Success! Row count: {cnt}")
+        read_df.show()
+    except Exception as e:
+        print(f"❌ Error during count(): {e}")
+
+    spark.stop()
+    
 if __name__ == "__main__":
     # run_zstd_example()
-    run_exam()
+    run_exam("no_spark_arrow_zstd.parquet_")
+    # run_exam("no_spark_arrow_zstd.parquet")
+    create_snappy_parquet()

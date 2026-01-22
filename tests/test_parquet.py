@@ -1,6 +1,7 @@
 import pytest
 from pyspark.sql import SparkSession
 import os
+from pyspark.sql import functions as F
 
 @pytest.fixture(scope="module")
 def spark():
@@ -28,6 +29,17 @@ def test_spark_read_zstd_parquet(spark):
     # 3. 스키마 및 데이터 확인
     print("[Step 3] Data Schema:")
     df.printSchema()
+
+    # 3. 모든 컬럼을 "|"로 합쳐서 하나의 문자열 컬럼으로 만들기
+    # df.columns를 사용해 동적으로 모든 컬럼을 선택합니다.
+    pipe_df = df.select(F.concat_ws("|", *df.columns).alias("piped_row"))
+
+    # 4. 상위 5개를 메모리에 리스트로 로드
+    print(f"\n[Step 5] Loading piped strings to memory:")
+    rows = [r["piped_row"] for r in pipe_df.take(5)]
+    
+    for row_str in rows:
+        print(row_str)
     
     data_count = df.count()
     print(f"[Step 4] Row Count: {data_count}")
@@ -52,6 +64,17 @@ def test_spark_read_snappy_parquet(spark):
     # 3. 스키마 및 데이터 확인
     print("[Step 3] Data Schema:")
     df.printSchema()
+
+    # 3. 모든 컬럼을 "|"로 합쳐서 하나의 문자열 컬럼으로 만들기
+    # df.columns를 사용해 동적으로 모든 컬럼을 선택합니다.
+    pipe_df = df.select(F.concat_ws("|", *df.columns).alias("piped_row"))
+
+    # 4. 상위 5개를 메모리에 리스트로 로드
+    print(f"\n[Step 5] Loading piped strings to memory:")
+    rows = [r["piped_row"] for r in pipe_df.take(5)]
+    
+    for row_str in rows:
+        print(row_str)
     
     data_count = df.count()
     print(f"[Step 4] Row Count: {data_count}")

@@ -2,3 +2,4 @@ pyspark==3.5.8
 pytest
 pyarrow
 pandas
+openpyxl
